@@ -8,8 +8,8 @@ fn main() {
 
   let mut larger = 0;
 
-  for i in 1..nums.len() {
-    if nums[i] > nums[i-1] {
+  for i in 3..nums.len() {
+    if nums[i] > nums[i-3] {
       larger += 1;
     }
   }
