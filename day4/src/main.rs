@@ -4,48 +4,32 @@ use std::collections::HashSet;
 
 use regex::Regex;
 
-fn has_bingo(board: &Vec<Vec<i32>>, nums: &HashSet<i32>) -> Option<i32> {
-  if nums.contains(&board[0][0]) &&
-     nums.contains(&board[1][1]) &&
-     nums.contains(&board[2][2]) &&
-     nums.contains(&board[3][3]) &&
-     nums.contains(&board[4][4]) {
-    return Some(board[0][0] + board[1][1] + board[2][2] + board[3][3] + board[4][4]);
-  }
-  if nums.contains(&board[0][4]) &&
-     nums.contains(&board[1][3]) &&
-     nums.contains(&board[2][2]) &&
-     nums.contains(&board[3][1]) &&
-     nums.contains(&board[4][0]) {
-    return Some(board[0][4] + board[1][3] + board[2][2] + board[3][1] + board[4][0]);
-  }
+fn has_bingo(board: &Vec<Vec<i32>>, nums: &HashSet<i32>) -> bool {
   for i in 0..5 {
-    let mut sum = 0;
+    let mut bingo = true;
     for j in 0..5 {
       if !nums.contains(&board[i][j]) {
-        sum = -1;
+        bingo = false;
         break;
       }
-      sum += board[i][j];
     }
-    if sum > 0 {
-      return Some(sum);
+    if bingo {
+      return true;
     }
   }
   for j in 0..5 {
-    let mut sum = 0;
+    let mut bingo = true;
     for i in 0..5 {
       if !nums.contains(&board[i][j]) {
-        sum = -1;
+        bingo = false;
         break;
       }
-      sum += board[i][j];
     }
-    if sum > 0 {
-      return Some(sum);
+    if bingo {
+      return true;
     }
   }
-  None
+  false
 }
 
 fn main() {
@@ -66,19 +50,26 @@ fn main() {
 
   for num in &nums {
     set.insert(*num);
-    for board in &boards {
-        if let Some(bingo_sum) = has_bingo(&board, &set) {
-            let mut unmarked_sum = 0;
-            for row in board {
-                for col in row {
-                    if !set.contains(&col) {
-                        unmarked_sum += col;
-                    }
-                }
-            }
-            println!("{}", num*unmarked_sum);
-            return;
-        }
+    boards = boards.into_iter().filter(|board| !has_bingo(&board, &set)).collect();
+    if boards.len() == 1 {
+      break;
     }
+  }
+
+  for num in &nums {
+    set.insert(*num);
+    if !has_bingo(&boards[0], &set) {
+      continue;
+    }
+    let mut unmarked_sum = 0;
+    for row in &boards[0] {
+      for col in row {
+        if !set.contains(&col) {
+          unmarked_sum += col;
+        }
+      }
+    }
+    println!("{}", num*unmarked_sum);
+    return;
   }
 }
