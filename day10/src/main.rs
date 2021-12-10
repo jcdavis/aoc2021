@@ -1,50 +1,59 @@
 use std::env;
 use std::fs;
 
-fn first_illegal(string: &str) -> Option<char> {
+fn first_illegal(string: &str) -> (Option<char>, Vec<char>) {
     let mut stack = Vec::new();
     for c in string.chars() {
         match c {
             '(' | '[' | '{' | '<' => stack.push(c),
             ')' => {
                 if stack.pop() != Some('(') {
-                    return Some(c);
+                    return (Some(c), stack);
                 }
             }
             ']' => {
                 if stack.pop() != Some('[') {
-                    return Some(c);
+                    return (Some(c), stack);
                 }
             }
             '}' => {
                 if stack.pop() != Some('{') {
-                    return Some(c);
+                    return (Some(c), stack);
                 }
             }
             '>' => {
                 if stack.pop() != Some('<') {
-                    return Some(c);
+                    return (Some(c), stack);
                 }
             }
-            _ => return Some('?'),
+            _ => panic!("unexpected char {}", c),
         }
     }
-    None
+    (None, stack)
 }
 fn main() {
     let args: Vec<String> = env::args().collect();
     let input = fs::read_to_string(&args[1]).unwrap();
 
-    let mut score = 0;
+    let mut scores = Vec::new();
     for line in input.lines() {
-        score += match first_illegal(line) {
-            Some(')') => 3,
-            Some(']') => 57,
-            Some('}') => 1197,
-            Some('>') => 25137,
-            None => 0,
-            _ => -10000000,
+        let (missing, stack) = first_illegal(line);
+
+        if missing == None {
+            let mut line_score: i64 = 0;
+            for c in stack.iter().rev() {
+                line_score *= 5;
+                line_score += match c {
+                    '(' => 1,
+                    '[' => 2,
+                    '{' => 3,
+                    '<' => 4,
+                    _ => panic!("{}", c),
+                }
+            }
+            scores.push(line_score);
         }
     }
-    println!("{:?}", score);
+    scores.sort();
+    println!("{:?}", scores[scores.len()/2]);
 }
