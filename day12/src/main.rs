@@ -1,21 +1,25 @@
 use std::env;
 use std::fs;
 use std::collections::HashMap;
-use std::collections::HashSet;
 
-fn dfs<'a>(mappings: &HashMap<&'a str, Vec<&'a str>>, visited: &mut HashSet<&'a str>, current: &'a str) -> i32 {
-    if visited.contains(current) {
+fn dfs<'a>(mappings: &HashMap<&'a str, Vec<&'a str>>, visited: &mut HashMap<&'a str, i32>, current: &'a str, double: &mut Option<&'a str>) -> i32 {
+    if visited.get(current) == Some(&2) || (visited.get(current) == Some(&1) && (double != &None || current == "start")) {
         return 0
     } else if current == "end" {
         return 1
     }
+    let old_double = double.clone();
     if current == current.to_lowercase() {
-        visited.insert(current);
+        *visited.entry(current).or_default() += 1;
+        if visited.get(current) == Some(&2) {
+            *double = Some(current);
+        }
     }
     let t = mappings.get(current).map(|links| links.iter().map(|link| {
-        dfs(mappings, visited, link)
+        dfs(mappings, visited, link, double)
     }).sum()).unwrap_or(0);
-    visited.remove(current);
+    *double = old_double;
+    visited.entry(current).and_modify(|e| *e -= 1);
     t
 }
 
@@ -30,5 +34,5 @@ fn main() {
         mappings.entry(parts[1]).or_default().push(parts[0]);
     }
 
-    println!("{}", dfs(&mappings, &mut HashSet::new(), "start"));
+    println!("{}", dfs(&mappings, &mut HashMap::new(), "start", &mut None));
 }
